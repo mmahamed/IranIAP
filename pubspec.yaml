@@ -1,0 +1,21 @@
+name: iran_iap
+description: A unified wrapper for Cafe Bazaar (Poolakey) and Myket in-app purchases.
+version: 1.0.0
+publish_to: 'none'
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+  flutter: ">=3.10.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_poolakey:
+    path: ./flutter_poolakey-2.2.0+1.0.0
+  myket_iap:
+    path: ./myket_iap-1.1.12
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0

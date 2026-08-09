@@ -1,0 +1,53 @@
+group 'ir.mservices.myketiap'
+version '1.0-SNAPSHOT'
+
+buildscript {
+    ext.kotlin_version = '1.9.20'
+    repositories {
+        maven { url 'https://maven.myket.ir' }
+        google()
+        mavenCentral()
+        maven { url 'https://jitpack.io' }
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.1.4'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+rootProject.allprojects {
+    repositories {
+        maven { url 'https://maven.myket.ir' }
+        google()
+        mavenCentral()
+        maven { url 'https://jitpack.io' }
+    }
+}
+
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+
+android {
+    compileSdkVersion 34
+    namespace 'ir.mservices.myketiap'
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+    }
+    defaultConfig {
+        minSdkVersion 16
+        consumerProguardFiles 'proguard-base.txt'
+    }
+    lintOptions {
+        disable 'InvalidPackage'
+    }
+    kotlin {
+        jvmToolchain(21)
+    }
+}
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation 'com.google.code.gson:gson:2.10.1'
+    implementation 'com.github.myketstore:myket-billing-client:1.19'
+}
