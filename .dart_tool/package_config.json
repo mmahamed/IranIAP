@@ -51,7 +51,7 @@
     },
     {
       "name": "flutter_poolakey",
-      "rootUri": "../flutter_poolakey-2.2.0+1.0.0",
+      "rootUri": "../packages/flutter_poolakey-2.2.0+1.0.0",
       "packageUri": "lib/",
       "languageVersion": "3.0"
     },
@@ -105,7 +105,7 @@
     },
     {
       "name": "myket_iap",
-      "rootUri": "../myket_iap-1.1.12",
+      "rootUri": "../packages/myket_iap-1.1.12",
       "packageUri": "lib/",
       "languageVersion": "2.12"
     },

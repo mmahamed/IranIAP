@@ -3,8 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_poolakey/flutter_poolakey.dart';
 import 'package:myket_iap/myket_iap.dart';
 import 'dart:async';
-import 'dart:developer';
-
 import 'package:myket_iap/util/iab_result.dart';
 import 'package:myket_iap/util/inventory.dart';
 import 'package:myket_iap/util/purchase.dart';
@@ -53,62 +51,75 @@ class IranIAP {
     final market = currentMarket;
 
     if (market == IranIAPMarket.bazaar) {
-      if (bazaarKey == null) throw ArgumentError('bazaarKey is required for Bazaar flavor');
+      try {
+        if (bazaarKey == null) throw ArgumentError('Bazaar RSA Key is required for Bazaar flavor');
 
-      final completer = Completer<void>();
+        final completer = Completer<void>();
 
-      await FlutterPoolakey.connect(
-        bazaarKey,
-        onSucceed: () {
-          log('IranIap: Connected to Bazaar successfully');
-          _isInitialized = true;
-          if (!completer.isCompleted) completer.complete();
-        },
-        onFailed: () {
-          log('IranIap: Failed to connect to Bazaar');
-          _isInitialized = false;
-          if (onFailed != null) onFailed('Failed to connect to Bazaar');
-          if (!completer.isCompleted) completer.completeError('Failed to connect to Bazaar');
-        },
-        onDisconnected: () {
-          log('IranIap: Disconnected from Bazaar service');
-          _isInitialized = false;
-          if (onDisconnected != null) onDisconnected();
-        },
-      );
+        await FlutterPoolakey.connect(
+          bazaarKey,
+          onSucceed: () {
+            debugPrint('IranIap: Connected to Bazaar successfully');
+            _isInitialized = true;
+            if (!completer.isCompleted) completer.complete();
+          },
+          onFailed: () {
+            debugPrint('IranIap: Failed to connect to Bazaar');
+            _isInitialized = false;
+            onFailed?.call('Failed to connect to Bazaar');
+            if (!completer.isCompleted) completer.completeError('Failed to connect to Bazaar');
+          },
+          onDisconnected: () {
+            debugPrint('IranIap: Disconnected from Bazaar service');
+            _isInitialized = false;
+            onDisconnected?.call();
+          },
+        );
 
-      return completer.future;
+        return completer.future;
+      } catch (e, s) {
+        debugPrint(e.toString());
+        debugPrintStack(stackTrace: s);
+        onFailed?.call(e.toString());
+      }
     } else if (market == IranIAPMarket.myket) {
-      if (myketKey == null) throw ArgumentError('myketKey is required for Myket flavor');
+      try {
+        if (myketKey == null) throw ArgumentError('Myket RSA Key is required for Myket flavor');
 
-      final result = await MyketIAP.init(
-        rsaKey: myketKey,
-        enableDebugLogging: kDebugMode,
-      );
+        final result = await MyketIAP.init(
+          rsaKey: myketKey,
+          enableDebugLogging: kDebugMode,
+        );
 
-      if (result?.isSuccess() ?? false) {
-        log('IranIap: Myket IAP initialized successfully: ${result?.mMessage}');
-        _isInitialized = true;
-      } else {
-        log('IranIap: Myket IAP Setup failed: ${result?.mMessage}');
-        _isInitialized = false;
-        if (onFailed != null) onFailed(result?.mMessage ?? '');
-        throw Exception('Myket IAP Setup failed: ${result?.mMessage}');
+        if (result?.isSuccess() ?? false) {
+          debugPrint('IranIap: Myket IAP initialized successfully: ${result?.mMessage}');
+          _isInitialized = true;
+        } else {
+          debugPrint('IranIap: Myket IAP Setup failed: ${result?.mMessage}');
+          _isInitialized = false;
+          onFailed?.call(result?.mMessage ?? '');
+        }
+      } catch (e, s) {
+        debugPrint(e.toString());
+        debugPrintStack(stackTrace: s);
+        onFailed?.call(e.toString());
       }
     } else {
-      log('IranIap: Unknown market flavor. IAP will not work.');
+      throw Exception('Unsupported market');
     }
   }
 
   /// Initiates a purchase for the given [productId].
-  static Future<IranIAPPurchase?> purchase(String productId, {String payload = ''}) async {
+  static Future<IranIAPPurchase?> purchase(String productId,
+      {String payload = '', String bazaarDynamicPriceToken = '', void Function(String error)? onError}) async {
     if (!_isInitialized) throw Exception('IranIap is not initialized');
 
     final market = currentMarket;
 
     if (market == IranIAPMarket.bazaar) {
       try {
-        final purchaseInfo = await FlutterPoolakey.purchase(productId, payload: payload);
+        final purchaseInfo =
+        await FlutterPoolakey.purchase(productId, payload: payload, dynamicPriceToken: bazaarDynamicPriceToken);
         return IranIAPPurchase(
           productId: purchaseInfo.productId,
           purchaseToken: purchaseInfo.purchaseToken,
@@ -120,118 +131,163 @@ class IranIAP {
       } catch (e, s) {
         debugPrint(e.toString());
         debugPrintStack(stackTrace: s);
+        onError?.call(e.toString());
         return null;
       }
     } else if (market == IranIAPMarket.myket) {
-      final response = await MyketIAP.launchPurchaseFlow(sku: productId, payload: payload);
-      final result = response[MyketIAP.RESULT] as IabResult;
-      final purchase = response[MyketIAP.PURCHASE] as Purchase;
-      if (result.isFailure()) {
-        throw Exception('Myket Purchase failed: ${result.mMessage}');
+      try {
+        final response = await MyketIAP.launchPurchaseFlow(sku: productId, payload: payload);
+        final result = response[MyketIAP.RESULT] as IabResult;
+        if (result.isFailure()) {
+          onError?.call(result.mMessage);
+          return null;
+        }
+        final purchase = response[MyketIAP.PURCHASE] as Purchase;
+        return IranIAPPurchase(
+          productId: purchase.mSku,
+          purchaseToken: purchase.mToken,
+          orderId: purchase.mOrderId,
+          payload: purchase.mDeveloperPayload,
+          packageName: purchase.mPackageName,
+          purchaseTime: DateTime.fromMillisecondsSinceEpoch(purchase.mPurchaseTime),
+        );
+      } catch (e, s) {
+        debugPrint(e.toString());
+        debugPrintStack(stackTrace: s);
+        onError?.call(e.toString());
+        return null;
       }
-      return IranIAPPurchase(
-        productId: purchase.mSku,
-        purchaseToken: purchase.mToken,
-        orderId: purchase.mOrderId,
-        payload: purchase.mDeveloperPayload,
-        packageName: purchase.mPackageName,
-        purchaseTime: DateTime.fromMillisecondsSinceEpoch(purchase.mPurchaseTime),
-      );
     } else {
       throw Exception('Unsupported market');
     }
   }
 
   /// Consumes a purchase given the [purchaseToken].
-  static Future<bool> consume(String? bazaarPurchaseToken, Purchase? myketPurchaseObject) async {
+  static Future<bool> consume(String? bazaarPurchaseToken, Purchase? myketPurchaseObject,
+      {void Function(String error)? onError}) async {
     if (!_isInitialized) throw Exception('IranIap is not initialized');
 
     final market = currentMarket;
-    if (market == IranIAPMarket.bazaar && bazaarPurchaseToken == null) throw Exception('purchaseToken is required');
-    if (market == IranIAPMarket.myket && myketPurchaseObject == null) throw Exception('purchase object is required');
-    if (market == IranIAPMarket.bazaar) {
-      return await FlutterPoolakey.consume(bazaarPurchaseToken!);
-    } else if (market == IranIAPMarket.myket) {
-      final response = await MyketIAP.consume(purchase: myketPurchaseObject!);
-      final result = response[MyketIAP.RESULT] as IabResult;
-      // final purchase = response[MyketIAP.PURCHASE] as Purchase;
-      return result.isSuccess();
-      // if (!result.isSuccess()) {
-      //   throw Exception('Myket Consume failed: ${result.mMessage}');
-      // }
+    if (market == IranIAPMarket.bazaar && bazaarPurchaseToken == null) {
+      onError?.call('purchaseToken is required');
+      return false;
+    }
+    if (market == IranIAPMarket.myket && myketPurchaseObject == null) {
+      onError?.call('purchase object is required');
+      return false;
+    }
+
+    try {
+      if (market == IranIAPMarket.bazaar) {
+        return await FlutterPoolakey.consume(bazaarPurchaseToken!);
+      } else if (market == IranIAPMarket.myket) {
+        final response = await MyketIAP.consume(purchase: myketPurchaseObject!);
+        final result = response[MyketIAP.RESULT] as IabResult;
+        // final purchase = response[MyketIAP.PURCHASE] as Purchase;
+        if (result.isFailure()) {
+          onError?.call(result.mMessage);
+          return false;
+        }
+        return true;
+      }
+    } catch (e, s) {
+      debugPrint(e.toString());
+      debugPrintStack(stackTrace: s);
+      onError?.call(e.toString());
     }
     return false;
   }
 
   /// Queries all owned (purchased) items.
-  static Future<List<IranIAPPurchase>> queryPurchases() async {
+  static Future<List<IranIAPPurchase>> queryPurchases({void Function(String error)? onError}) async {
     if (!_isInitialized) throw Exception('IranIap is not initialized');
 
     final market = currentMarket;
 
-    if (market == IranIAPMarket.bazaar) {
-      final purchases = await FlutterPoolakey.getAllPurchasedProducts();
-      return purchases
-          .map((p) => IranIAPPurchase(
-                productId: p.productId,
-                purchaseToken: p.purchaseToken,
-                orderId: p.orderId,
-                payload: p.payload,
-                packageName: p.packageName,
-                purchaseTime: DateTime.fromMillisecondsSinceEpoch(p.purchaseTime),
-              ))
-          .toList();
-    } else if (market == IranIAPMarket.myket) {
-      final response = await MyketIAP.queryInventory(querySkuDetails: true);
-      final result = response[MyketIAP.RESULT] as IabResult;
-      final inventory = response[MyketIAP.INVENTORY] as Inventory;
+    try {
+      if (market == IranIAPMarket.bazaar) {
+        final purchases = await FlutterPoolakey.getAllPurchasedProducts();
+        return purchases
+            .map((p) => IranIAPPurchase(
+          productId: p.productId,
+          purchaseToken: p.purchaseToken,
+          orderId: p.orderId,
+          payload: p.payload,
+          packageName: p.packageName,
+          purchaseTime: DateTime.fromMillisecondsSinceEpoch(p.purchaseTime),
+        ))
+            .toList();
+      } else if (market == IranIAPMarket.myket) {
+        final response = await MyketIAP.queryInventory(querySkuDetails: true);
+        final result = response[MyketIAP.RESULT] as IabResult;
+        if (result.isFailure()) {
+          onError?.call(result.mMessage);
+          return [];
+        }
 
-      if (!result.isSuccess()) {
-        throw Exception('Myket Query failed: ${result.mMessage}');
+        final inventory = response[MyketIAP.INVENTORY] as Inventory;
+        return inventory.mPurchaseMap.values
+            .map((p) => IranIAPPurchase(
+          productId: p.mSku,
+          purchaseToken: p.mToken,
+          orderId: p.mOrderId,
+          payload: p.mDeveloperPayload,
+          packageName: p.mPackageName,
+          purchaseTime: DateTime.fromMillisecondsSinceEpoch(p.mPurchaseTime),
+        ))
+            .toList();
       }
-      return inventory.mPurchaseMap.values
-          .map((p) => IranIAPPurchase(
-                productId: p.mSku,
-                purchaseToken: p.mToken,
-                orderId: p.mOrderId,
-                payload: p.mDeveloperPayload,
-                packageName: p.mPackageName,
-                purchaseTime: DateTime.fromMillisecondsSinceEpoch(p.mPurchaseTime),
-              ))
-          .toList();
-    } else {
-      return [];
-    }
-  }
-
-  /// Subscription support (Bazaar only).
-  static Future<List<IranIAPPurchase>> querySubscriptions() async {
-    if (!_isInitialized) throw Exception('IranIap is not initialized');
-
-    if (currentMarket == IranIAPMarket.bazaar) {
-      final subs = await FlutterPoolakey.getAllSubscribedProducts();
-      return subs
-          .map((p) => IranIAPPurchase(
-                productId: p.productId,
-                purchaseToken: p.purchaseToken,
-                orderId: p.orderId,
-                payload: p.payload,
-                packageName: p.packageName,
-                purchaseTime: DateTime.fromMillisecondsSinceEpoch(p.purchaseTime),
-              ))
-          .toList();
+    } catch (e, s) {
+      debugPrint(e.toString());
+      debugPrintStack(stackTrace: s);
+      onError?.call(e.toString());
     }
     return [];
   }
 
-  /// Disconnects and cleans up resources.
-  static Future<void> dispose() async {
-    final market = currentMarket;
-    if (market == IranIAPMarket.bazaar) {
-      await FlutterPoolakey.disconnect();
-    } else if (market == IranIAPMarket.myket) {
-      await MyketIAP.dispose();
+  /// Subscription support (Bazaar only).
+  static Future<List<IranIAPPurchase>> querySubscriptions({void Function(String error)? onError}) async {
+    if (!_isInitialized) throw Exception('IranIap is not initialized');
+
+    if (currentMarket == IranIAPMarket.bazaar) {
+      try {
+        final subs = await FlutterPoolakey.getAllSubscribedProducts();
+        return subs
+            .map((p) => IranIAPPurchase(
+          productId: p.productId,
+          purchaseToken: p.purchaseToken,
+          orderId: p.orderId,
+          payload: p.payload,
+          packageName: p.packageName,
+          purchaseTime: DateTime.fromMillisecondsSinceEpoch(p.purchaseTime),
+        ))
+            .toList();
+      } catch (e, s) {
+        debugPrint(e.toString());
+        debugPrintStack(stackTrace: s);
+        onError?.call(e.toString());
+        return [];
+      }
+    } else {
+      throw Exception('Myket currently does not support subscription.');
     }
-    _isInitialized = false;
+  }
+
+  /// Disconnects and cleans up resources.
+  static Future<void> dispose({void Function(String error)? onError}) async {
+    final market = currentMarket;
+    try {
+      if (market == IranIAPMarket.bazaar) {
+        await FlutterPoolakey.disconnect();
+      } else if (market == IranIAPMarket.myket) {
+        await MyketIAP.dispose();
+      }
+    } catch (e, s) {
+      debugPrint(e.toString());
+      debugPrintStack(stackTrace: s);
+      onError?.call(e.toString());
+    } finally {
+      _isInitialized = false;
+    }
   }
 }

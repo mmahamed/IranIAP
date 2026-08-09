@@ -11,9 +11,9 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_poolakey:
-    path: ./flutter_poolakey-2.2.0+1.0.0
+    path: ./packages/flutter_poolakey-2.2.0+1.0.0
   myket_iap:
-    path: ./myket_iap-1.1.12
+    path: ./packages/myket_iap-1.1.12
 
 dev_dependencies:
   flutter_test:
