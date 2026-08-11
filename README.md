@@ -1,4 +1,4 @@
-# Iran IAP 🇮🇷
+# Iran IAP 
 
 A Flutter plugin that provides a unified API for **in-app purchases** on **CafeBazaar** and **Myket**.
 
