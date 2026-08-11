@@ -1,6 +1,10 @@
 <component name="libraryTable">
   <library name="Flutter Plugins" type="FlutterPluginsLibraryType">
-    <CLASSES />
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$" />
+      <root url="file://$PROJECT_DIR$/../../ProgrammingTools/Android/PubCache/hosted/pub.myket.ir/flutter_poolakey-2.2.0+1.0.0" />
+      <root url="file://$PROJECT_DIR$/../../ProgrammingTools/Android/PubCache/hosted/pub.myket.ir/myket_iap-1.1.12" />
+    </CLASSES>
     <JAVADOC />
     <SOURCES />
   </library>

@@ -45,13 +45,13 @@
     },
     {
       "name": "flutter_lints",
-      "rootUri": "file:///D:/ProgrammingTools/Android/PubCache/hosted/pub.myket.ir/flutter_lints-3.0.2",
+      "rootUri": "file:///D:/ProgrammingTools/Android/PubCache/hosted/pub.myket.ir/flutter_lints-6.0.0",
       "packageUri": "lib/",
-      "languageVersion": "3.1"
+      "languageVersion": "3.8"
     },
     {
       "name": "flutter_poolakey",
-      "rootUri": "../packages/flutter_poolakey-2.2.0+1.0.0",
+      "rootUri": "file:///D:/ProgrammingTools/Android/PubCache/hosted/pub.myket.ir/flutter_poolakey-2.2.0+1.0.0",
       "packageUri": "lib/",
       "languageVersion": "3.0"
     },
@@ -81,9 +81,9 @@
     },
     {
       "name": "lints",
-      "rootUri": "file:///D:/ProgrammingTools/Android/PubCache/hosted/pub.myket.ir/lints-3.0.0",
+      "rootUri": "file:///D:/ProgrammingTools/Android/PubCache/hosted/pub.myket.ir/lints-6.1.0",
       "packageUri": "lib/",
-      "languageVersion": "3.0"
+      "languageVersion": "3.8"
     },
     {
       "name": "matcher",
@@ -105,7 +105,7 @@
     },
     {
       "name": "myket_iap",
-      "rootUri": "../packages/myket_iap-1.1.12",
+      "rootUri": "file:///D:/ProgrammingTools/Android/PubCache/hosted/pub.myket.ir/myket_iap-1.1.12",
       "packageUri": "lib/",
       "languageVersion": "2.12"
     },
@@ -179,7 +179,7 @@
       "name": "iran_iap",
       "rootUri": "../",
       "packageUri": "lib/",
-      "languageVersion": "3.0"
+      "languageVersion": "3.10"
     }
   ],
   "generator": "pub",

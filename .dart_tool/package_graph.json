@@ -9,7 +9,8 @@
       "dependencies": [
         "flutter",
         "flutter_poolakey",
-        "myket_iap"
+        "myket_iap",
+        "plugin_platform_interface"
       ],
       "devDependencies": [
         "flutter_lints",
@@ -18,7 +19,7 @@
     },
     {
       "name": "flutter_lints",
-      "version": "3.0.2",
+      "version": "6.0.0",
       "dependencies": [
         "lints"
       ]
@@ -57,6 +58,13 @@
       ]
     },
     {
+      "name": "plugin_platform_interface",
+      "version": "2.1.8",
+      "dependencies": [
+        "meta"
+      ]
+    },
+    {
       "name": "flutter",
       "version": "0.0.0",
       "dependencies": [
@@ -70,7 +78,7 @@
     },
     {
       "name": "lints",
-      "version": "3.0.0",
+      "version": "6.1.0",
       "dependencies": []
     },
     {
@@ -155,13 +163,6 @@
         "stream_channel",
         "string_scanner",
         "term_glyph"
-      ]
-    },
-    {
-      "name": "plugin_platform_interface",
-      "version": "2.1.8",
-      "dependencies": [
-        "meta"
       ]
     },
     {

@@ -1,11 +1,15 @@
+
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_poolakey/flutter_poolakey.dart';
 import 'package:myket_iap/myket_iap.dart';
-import 'dart:async';
 import 'package:myket_iap/util/iab_result.dart';
 import 'package:myket_iap/util/inventory.dart';
 import 'package:myket_iap/util/purchase.dart';
+
+import 'iran_iap_platform_interface.dart';
 
 enum IranIAPMarket { bazaar, myket, unknown }
 
@@ -28,6 +32,10 @@ class IranIAPPurchase {
 }
 
 class IranIAP {
+  Future<String?> getPlatformVersion() {
+    return IranIapPlatform.instance.getPlatformVersion();
+  }
+
   static IranIAPMarket get currentMarket {
     final flavor = appFlavor?.toLowerCase();
     if (flavor == 'bazaar') return IranIAPMarket.bazaar;
@@ -290,4 +298,5 @@ class IranIAP {
       _isInitialized = false;
     }
   }
+
 }
